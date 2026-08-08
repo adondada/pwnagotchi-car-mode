@@ -1,0 +1,42 @@
+# Recommended starting configuration for Car Mode v6.5.1
+# GPS is intentionally disabled here. Enable it only when your setup exposes
+# valid GPS speed data to the Pwnagotchi session.
+
+[main.plugins.car_mode]
+enabled = true
+
+# Manual Car Mode profile. One hop unit is 250 ms, so 1 = 250 ms.
+hop_period = 1
+channels = "1,6,11"
+
+# Movement sensor fusion.
+sensor_fusion_enabled = true
+wifi_movement_weight = 0.60
+
+# Passive BLE movement sensing. The tether guard pauses BLE discovery whenever
+# an active Linux Bluetooth PAN interface (bnep*) is detected.
+ble_movement_enabled = true
+ble_skip_if_pan_active = true
+ble_movement_weight = 0.40
+ble_scan_interval = 10.0
+ble_scan_duration = 2
+ble_min_rssi = -90
+ble_min_devices = 3
+ble_rssi_delta_full_scale = 18.0
+
+# Higher smoothing reacts faster; lower is steadier.
+movement_smoothing = 0.35
+moving_threshold = 0.45
+stationary_threshold = 0.15
+stationary_timeout = 60.0
+
+# Used only by legacy Wi-Fi-only stop detection when sensor fusion is disabled.
+environment_similarity = 0.80
+
+# Optional GPS settings.
+gps_mode_enabled = false
+gps_movement_weight = 0.80
+gps_speed_threshold = 20.0
+gps_fast_channels = "1,6,11"
+gps_slow_channels = "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+gps_speed_is_mps = false
