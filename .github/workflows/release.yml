@@ -1,0 +1,56 @@
+name: Release Car Mode
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - car_mode.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Syntax check
+        run: python -m py_compile car_mode.py
+
+      - name: Read plugin version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(python - <<'PY'
+          import re
+          from pathlib import Path
+          text = Path('car_mode.py').read_text(encoding='utf-8')
+          match = re.search(r'__version__\s*=\s*["\x27]([^"\x27]+)', text)
+          if not match:
+              raise SystemExit('Could not find __version__ in car_mode.py')
+          print(match.group(1))
+          PY
+          )
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "$TAG already exists; replacing attached plugin/config assets."
+            gh release upload "$TAG" car_mode.py examples/config.toml --clobber
+          else
+            gh release create "$TAG" \
+              car_mode.py examples/config.toml \
+              --target "$GITHUB_SHA" \
+              --title "Pwnagotchi Car Mode v$VERSION" \
+              --generate-notes
+          fi
